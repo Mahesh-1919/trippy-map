@@ -1,25 +1,58 @@
 {
   "expo": {
-    "name": "maps",
-    "slug": "maps",
+    "name": "Bike Nav",
+    "slug": "bike-nav",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": false,
+      "bundleIdentifier": "com.techlanz.bikenav",
+      "infoPlist": {
+        "UIBackgroundModes": ["location", "bluetooth-central"],
+        "NSLocationWhenInUseUsageDescription": "Shows your position on the map and guides you along the route.",
+        "NSLocationAlwaysAndWhenInUseUsageDescription": "Keeps navigation running while the screen is off.",
+        "NSBluetoothAlwaysUsageDescription": "Sends turn-by-turn directions to your bike display."
+      }
     },
     "android": {
+      "package": "com.techlanz.bikenav",
       "adaptiveIcon": {
         "backgroundColor": "#E6F4FE",
         "foregroundImage": "./assets/android-icon-foreground.png",
         "backgroundImage": "./assets/android-icon-background.png",
         "monochromeImage": "./assets/android-icon-monochrome.png"
       },
-      "predictiveBackGestureEnabled": false
+      "predictiveBackGestureEnabled": false,
+      "permissions": [
+        "ACCESS_FINE_LOCATION",
+        "ACCESS_COARSE_LOCATION",
+        "ACCESS_BACKGROUND_LOCATION",
+        "RECEIVE_BOOT_COMPLETED",
+        "FOREGROUND_SERVICE",
+        "FOREGROUND_SERVICE_LOCATION",
+        "BLUETOOTH_SCAN",
+        "BLUETOOTH_CONNECT"
+      ]
     },
-    "web": {
-      "favicon": "./assets/favicon.png"
-    }
+    "plugins": [
+      "expo-build-properties",
+      [
+        "expo-location",
+        {
+          "isAndroidForegroundServiceEnabled": true,
+          "isAndroidBackgroundLocationEnabled": true
+        }
+      ],
+      [
+        "react-native-ble-plx",
+        {
+          "isBackgroundEnabled": true,
+          "modes": ["central"],
+          "bluetoothAlwaysPermission": "Sends turn-by-turn directions to your bike display."
+        }
+      ]
+    ]
   }
 }
