@@ -24,7 +24,13 @@ export function decodePolyline6(str: string): LngLat[] {
   return out;
 }
 
-export async function fetchRoute(from: LngLat, to: LngLat, signal?: AbortSignal): Promise<Route> {
+/** Main route first, followed by up to `alternates` alternative routes. */
+export async function fetchRoutes(
+  from: LngLat,
+  to: LngLat,
+  alternates = 2,
+  signal?: AbortSignal,
+): Promise<Route[]> {
   const res = await fetch(`${VALHALLA_URL}/route`, {
     method: 'POST',
     signal,
@@ -35,6 +41,7 @@ export async function fetchRoute(from: LngLat, to: LngLat, signal?: AbortSignal)
         { lat: to[1], lon: to[0] },
       ],
       costing: VALHALLA_COSTING,
+      alternates,
       directions_options: { units: 'kilometers' },
     }),
   });
@@ -42,7 +49,25 @@ export async function fetchRoute(from: LngLat, to: LngLat, signal?: AbortSignal)
   if (!res.ok || !json?.trip) {
     throw new Error(json?.error ?? `Valhalla HTTP ${res.status}`);
   }
-  return parseValhallaTrip(json.trip);
+  const trips: any[] = [json.trip, ...(json.alternates ?? []).map((a: any) => a.trip)];
+  return trips.map(parseValhallaTrip);
+}
+
+/** Main street of a route (the one covering the most distance), for "via X" labels. */
+export function routeVia(route: Route): string {
+  const byName = new Map<string, number>();
+  for (const s of route.steps) {
+    if (s.name) byName.set(s.name, (byName.get(s.name) ?? 0) + s.distance);
+  }
+  let best = '';
+  let max = 0;
+  byName.forEach((d, n) => {
+    if (d > max) {
+      max = d;
+      best = n;
+    }
+  });
+  return best;
 }
 
 export function parseValhallaTrip(trip: any): Route {

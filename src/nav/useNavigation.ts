@@ -3,7 +3,7 @@ import { useCallback, useEffect, useRef } from 'react';
 import { isExpoGo } from '../config/env';
 import { setLocationHandler, startLocationUpdates, stopLocationUpdates } from './locationTask';
 import { ble } from '../services/ble';
-import { fetchRoute } from '../services/valhalla';
+import { fetchRoutes } from '../services/valhalla';
 import { encodeNavState, encodeStreet } from '../protocol/encode';
 import { useNav } from '../store/nav';
 import { NavEngine } from './engine';
@@ -15,17 +15,18 @@ export function useNavigation() {
   const seq = useRef(0);
   const rerouting = useRef(false);
 
-  const calcRoute = useCallback(async (from: LngLat, to: LngLat) => {
+  /** Fetch the main route plus `alternates` alternatives; the main route is selected. */
+  const calcRoutes = useCallback(async (from: LngLat, to: LngLat, alternates = 2) => {
     const s = useNav.getState();
     try {
       s.setError(null);
-      const route = await fetchRoute(from, to);
-      s.setRoute(route);
-      engine.current = new NavEngine(route);
-      return route;
+      const routes = await fetchRoutes(from, to, alternates);
+      s.setRoutes(routes, 0);
+      engine.current = new NavEngine(routes[0]);
+      return routes;
     } catch (e: any) {
       s.setError(e?.message ?? 'Routing failed');
-      return null;
+      return [];
     }
   }, []);
 
@@ -72,7 +73,7 @@ export function useNavigation() {
           st.setNav(n);
           if (n.offRoute && !rerouting.current && st.destination) {
             rerouting.current = true;
-            calcRoute(pos, st.destination).finally(() => (rerouting.current = false));
+            calcRoutes(pos, st.destination, 0).finally(() => (rerouting.current = false));
           }
         }
       };
@@ -95,7 +96,7 @@ export function useNavigation() {
       setLocationHandler(null);
       stopLocationUpdates().catch(() => {});
     };
-  }, [calcRoute]);
+  }, [calcRoutes]);
 
   // 1 Hz BLE sender
   useEffect(() => {
@@ -120,5 +121,5 @@ export function useNavigation() {
     return () => clearInterval(t);
   }, []);
 
-  return { calcRoute, start, stop };
+  return { calcRoutes, start, stop };
 }

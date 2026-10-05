@@ -3,6 +3,7 @@
   "version": "1.0.0",
   "main": "index.ts",
   "dependencies": {
+    "@expo/vector-icons": "^15.0.2",
     "@types/jest": "29.5.14",
     "base-64": "^1.0.0",
     "expo": "~57.0.26",
@@ -12,6 +13,7 @@
     "expo-location": "~57.0.20",
     "expo-secure-store": "~57.0.4",
     "expo-status-bar": "~57.0.1",
+    "expo-system-ui": "~57.0.4",
     "expo-task-manager": "~57.0.21",
     "react": "19.2.3",
     "react-native": "0.86.3",

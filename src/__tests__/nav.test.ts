@@ -1,6 +1,6 @@
 import { NavEngine } from '../nav/engine';
 import { Icon, valhallaIcon } from '../nav/maneuver';
-import { decodePolyline6, parseValhallaTrip } from '../services/valhalla';
+import { decodePolyline6, parseValhallaTrip, routeVia } from '../services/valhalla';
 import { encodeNavState, encodeStreet } from '../protocol/encode';
 import type { LngLat } from '../nav/types';
 
@@ -49,6 +49,25 @@ describe('polyline6', () => {
       expect(p[0]).toBeCloseTo(pts[i][0], 6);
       expect(p[1]).toBeCloseTo(pts[i][1], 6);
     });
+  });
+});
+
+describe('routeVia', () => {
+  it('names the street covering the most distance', () => {
+    const r = parseValhallaTrip({
+      summary: { length: 5, time: 600 },
+      legs: [
+        {
+          shape: encodePolyline6(pts),
+          maneuvers: [
+            { type: 1, begin_shape_index: 0, length: 0.5, street_names: ['Side St'] },
+            { type: 15, begin_shape_index: 2, length: 4, street_names: ['Ring Road'] },
+            { type: 4, begin_shape_index: 4, length: 0.5, street_names: ['Side St'] },
+          ],
+        },
+      ],
+    });
+    expect(routeVia(r)).toBe('Ring Road');
   });
 });
 
